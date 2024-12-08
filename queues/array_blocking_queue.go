@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+// ArrayBlockingQueue is a thread-safe fixed size queue that blocks on full or
+// empty conditions when adding or removing elements respectively.
 type ArrayBlockingQueue[T any] struct {
 	items    []T
 	head     int
@@ -16,6 +18,8 @@ type ArrayBlockingQueue[T any] struct {
 	notEmpty *sync.Cond
 }
 
+// NewArrayBlockingQueue creates a new ArrayBlockingQueue with the specified capacity.
+// The queue blocks operations when it is full or empty.
 func NewArrayBlockingQueue[T any](capacity int) *ArrayBlockingQueue[T] {
 	mutex := &sync.Mutex{}
 	return &ArrayBlockingQueue[T]{
@@ -27,6 +31,8 @@ func NewArrayBlockingQueue[T any](capacity int) *ArrayBlockingQueue[T] {
 	}
 }
 
+// Put adds an item to the tail of the queue, blocking if the queue is full
+// until space becomes available.
 func (q *ArrayBlockingQueue[T]) Put(item T) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -42,6 +48,8 @@ func (q *ArrayBlockingQueue[T]) Put(item T) error {
 	return nil
 }
 
+// Take retrieves and removes the item at the head of the queue, blocking
+// if the queue is empty until an item becomes available.
 func (q *ArrayBlockingQueue[T]) Take() (T, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -50,23 +58,17 @@ func (q *ArrayBlockingQueue[T]) Take() (T, error) {
 		q.notEmpty.Wait()
 	}
 
-	// Get the item
 	item := q.items[q.head]
-
-	// Clear the item from the queue for GC
-	var zeroValue T // Initialize zero value for this type
+	var zeroValue T
 	q.items[q.head] = zeroValue
-
-	// Move the head
 	q.head = (q.head + 1) % q.capacity
 	q.count--
-
-	// Notify that there is space available
 	q.notFull.Signal()
-
 	return item, nil
 }
 
+// Offer attempts to add an item to the queue without blocking. Returns an
+// error if the queue is full.
 func (q *ArrayBlockingQueue[T]) Offer(item T) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -82,6 +84,8 @@ func (q *ArrayBlockingQueue[T]) Offer(item T) error {
 	return nil
 }
 
+// Poll retrieves and removes the item at the head of the queue without
+// blocking. Returns an error if the queue is empty.
 func (q *ArrayBlockingQueue[T]) Poll() (T, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -98,6 +102,8 @@ func (q *ArrayBlockingQueue[T]) Poll() (T, error) {
 	return item, nil
 }
 
+// Peek returns the item at the head of the queue without removing it.
+// Returns an error if the queue is empty.
 func (q *ArrayBlockingQueue[T]) Peek() (T, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -110,23 +116,22 @@ func (q *ArrayBlockingQueue[T]) Peek() (T, error) {
 	return q.items[q.head], nil
 }
 
+// Dump returns a slice of all the current elements in the queue and clears it.
+// This operation is thread-safe.
 func (q *ArrayBlockingQueue[T]) Dump() []T {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	// Prepare a slice to dump existing elements in order
 	dump := make([]T, q.count)
 	if q.count > 0 {
 		if q.head < q.tail {
 			copy(dump, q.items[q.head:q.tail])
 		} else {
-			// Case where the circular buffer wrapped around
 			n := copy(dump, q.items[q.head:])
 			copy(dump[n:], q.items[:q.tail])
 		}
 	}
 
-	// Clear the queue
 	var zeroValue T
 	for i := range q.items {
 		q.items[i] = zeroValue
@@ -135,7 +140,6 @@ func (q *ArrayBlockingQueue[T]) Dump() []T {
 	q.tail = 0
 	q.count = 0
 
-	// Notify waiting goroutines that space is now available
 	q.notFull.Broadcast()
 
 	return dump
