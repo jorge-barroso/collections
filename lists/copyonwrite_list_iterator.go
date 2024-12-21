@@ -4,27 +4,26 @@ import (
 	"errors"
 )
 
+// CopyOnWriteListIterator provides iteration over a snapshot of CopyOnWriteList elements
 type CopyOnWriteListIterator[T any] struct {
-	index int
-	list  *CopyOnWriteList[T]
+	snapshot []T // Immutable snapshot of the list at iterator creation time
+	index    int // Current position in the snapshot
 }
 
-// HasNext checks if there are more elements to iterate over
-func (iter *CopyOnWriteListIterator[T]) HasNext() bool {
-	iter.list.mutex.RLock()
-	defer iter.list.mutex.RUnlock()
-	return iter.index < len(iter.list.elements)
-}
-
-// Next returns the next element in the iteration
-func (iter *CopyOnWriteListIterator[T]) Next() (T, error) {
-	iter.list.mutex.RLock()
-	defer iter.list.mutex.RUnlock()
-	if iter.index >= len(iter.list.elements) {
-		var zeroValue T
-		return zeroValue, errors.New("no more elements")
+// Next advances the iterator to the next element
+func (it *CopyOnWriteListIterator[T]) Next() bool {
+	if it.index+1 < len(it.snapshot) {
+		it.index++
+		return true
 	}
-	element := iter.list.elements[iter.index]
-	iter.index++
-	return element, nil
+	return false
+}
+
+// Value returns the current element in the iteration
+func (it *CopyOnWriteListIterator[T]) Value() (T, error) {
+	if it.index < 0 {
+		var zero T
+		return zero, errors.New("no more elements")
+	}
+	return it.snapshot[it.index], nil
 }

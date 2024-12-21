@@ -2,6 +2,7 @@ package lists
 
 import (
 	"errors"
+	"github.com/jorge-barroso/collections"
 )
 
 // ArrayList implementation using generics
@@ -14,21 +15,13 @@ func NewArrayList[T any]() *ArrayList[T] {
 	return &ArrayList[T]{elements: []T{}}
 }
 
-// NewIterator for ArrayList
-func (a *ArrayList[T]) NewIterator() *ArrayListIterator[T] {
-	return &ArrayListIterator[T]{
-		index: -1,
-		list:  a,
-	}
-}
-
 // Add appends an item to the end of the list
 func (a *ArrayList[T]) Add(item T) {
 	a.elements = append(a.elements, item)
 }
 
-// RemoveAt removes element at specified index
-func (a *ArrayList[T]) RemoveAt(index int) error {
+// Remove removes element at specified index
+func (a *ArrayList[T]) Remove(index int) error {
 	if index < 0 || index >= len(a.elements) {
 		return errors.New("index out of bounds")
 	}
@@ -48,4 +41,12 @@ func (a *ArrayList[T]) Get(index int) (T, error) {
 // Size returns the number of elements in the list
 func (a *ArrayList[T]) Size() int {
 	return len(a.elements)
+}
+
+// NewIterator creates and returns a new iterator for the ArrayList.
+func (a *ArrayList[T]) NewIterator() collections.Iterator[T] {
+	return &ArrayListIterator[T]{
+		index: -1,
+		list:  a,
+	}
 }

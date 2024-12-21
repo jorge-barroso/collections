@@ -1,8 +1,8 @@
 package queues
 
 import (
-	"collections"
 	"errors"
+	"github.com/jorge-barroso/collections"
 	"sync"
 )
 

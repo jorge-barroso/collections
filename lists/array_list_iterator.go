@@ -8,12 +8,12 @@ type ArrayListIterator[T any] struct {
 	list  *ArrayList[T]
 }
 
-func (iter *ArrayListIterator[T]) HasNext() bool {
+func (iter *ArrayListIterator[T]) Next() bool {
 	return iter.index < len(iter.list.elements)-1
 }
 
-func (iter *ArrayListIterator[T]) Next() (T, error) {
-	if !iter.HasNext() {
+func (iter *ArrayListIterator[T]) Value() (T, error) {
+	if !iter.Next() {
 		var zero T
 		return zero, errors.New("no more elements")
 	}
