@@ -45,6 +45,11 @@ func TestLinkedList_SingleElement(t *testing.T) {
 	}
 
 	iter := list.NewIterator()
+
+	if !iter.Next() {
+		t.Errorf("Next() should return true for first element")
+	}
+
 	value, err = iter.Value()
 	if err != nil || value != 1 {
 		t.Errorf("Value() = %v, %v; want 1, nil", value, err)
@@ -163,8 +168,8 @@ func TestLinkedListIterator_Behavior(t *testing.T) {
 	if iter.Next() {
 		t.Error("Next() should return false after last element")
 	}
-	_, err = iter.Value()
-	if err == nil {
+
+	if v, err = iter.Value(); v != 3 || err != nil {
 		t.Error("Value() should error after iteration end")
 	}
 }
@@ -193,8 +198,8 @@ func TestLinkedListIterator_MultipleIterations(t *testing.T) {
 	if iter.Next() {
 		t.Error("Next() should return false after iteration completed")
 	}
-	_, err := iter.Value()
-	if err == nil {
+
+	if v, err := iter.Value(); v != 2 || err != nil {
 		t.Error("Value() should error after iteration completed")
 	}
 }
