@@ -10,9 +10,20 @@ type ArrayList[T any] struct {
 	elements []T
 }
 
+// Ensure ArrayList implements both Map and Iterable interfaces
+var _ List[int] = (*ArrayList[int])(nil)
+var _ collections.Iterable[int] = (*ArrayList[int])(nil)
+
+// NewArrayListWithCapacity creates and returns a new instance of ArrayList with the desired initial capacity
+func NewArrayListWithCapacity[T any](capacity int) *ArrayList[T] {
+	return &ArrayList[T]{
+		elements: make([]T, 0, capacity),
+	}
+}
+
 // NewArrayList creates and returns a new instance of ArrayList
 func NewArrayList[T any]() *ArrayList[T] {
-	return &ArrayList[T]{elements: []T{}}
+	return NewArrayListWithCapacity[T](defaultCapacity)
 }
 
 // Add appends an item to the end of the list

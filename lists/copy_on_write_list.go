@@ -13,11 +13,20 @@ type CopyOnWriteList[T any] struct {
 	elements []T
 }
 
+// Ensure CopyOnWriteList implements both Map and Iterable interfaces
+var _ List[int] = (*CopyOnWriteList[int])(nil)
+var _ collections.Iterable[int] = (*CopyOnWriteList[int])(nil)
+
+// NewCopyOnWriteListWithCapacity creates a new CopyOnWriteList instance with the desired initial capacity
+func NewCopyOnWriteListWithCapacity[T any](capacity int) *CopyOnWriteList[T] {
+	return &CopyOnWriteList[T]{
+		elements: make([]T, 0, capacity),
+	}
+}
+
 // NewCopyOnWriteList creates a new CopyOnWriteList instance
 func NewCopyOnWriteList[T any]() *CopyOnWriteList[T] {
-	return &CopyOnWriteList[T]{
-		elements: make([]T, 0),
-	}
+	return NewCopyOnWriteListWithCapacity[T](defaultCapacity)
 }
 
 // Add appends an item to the end of the list
