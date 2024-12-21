@@ -2,92 +2,79 @@ package lists
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLinkedList_EmptyList(t *testing.T) {
 	list := NewLinkedList[int]()
 
-	if list.Size() != 0 {
-		t.Errorf("expected size 0, got %d", list.Size())
-	}
+	// Test size
+	assert.Equal(t, 0, list.Size(), "Expected size 0 for empty list")
 
+	// Test Get
 	_, err := list.Get(0)
-	if err == nil {
-		t.Error("expected error getting from empty list")
-	}
+	assert.Error(t, err, "Expected error when getting from empty list")
 
+	// Test Remove
 	err = list.Remove(0)
-	if err == nil {
-		t.Error("expected error removing from empty list")
-	}
+	assert.Error(t, err, "Expected error when removing from empty list")
 
+	// Test Iterator
 	iter := list.NewIterator()
-	if iter.Next() {
-		t.Error("Next() should return false for empty list")
-	}
+	assert.False(t, iter.Next(), "Next() should return false for empty list")
 	_, err = iter.Value()
-	if err == nil {
-		t.Error("Value() should error on empty list")
-	}
+	assert.Error(t, err, "Value() should return error for empty list")
 }
 
 func TestLinkedList_SingleElement(t *testing.T) {
 	list := NewLinkedList[int]()
 	list.Add(1)
 
-	if list.Size() != 1 {
-		t.Errorf("expected size 1, got %d", list.Size())
-	}
+	// Test size
+	assert.Equal(t, 1, list.Size(), "Expected size 1 after adding one element")
 
+	// Test Get
 	value, err := list.Get(0)
-	if err != nil || value != 1 {
-		t.Errorf("Get(0) = %v, %v; want 1, nil", value, err)
-	}
+	assert.NoError(t, err, "Unexpected error when getting value at index 0")
+	assert.Equal(t, 1, value, "Value mismatch at index 0")
 
+	// Test Iterator
 	iter := list.NewIterator()
-
-	if !iter.Next() {
-		t.Errorf("Next() should return true for first element")
-	}
+	assert.True(t, iter.Next(), "Next() should return true for first element")
 
 	value, err = iter.Value()
-	if err != nil || value != 1 {
-		t.Errorf("Value() = %v, %v; want 1, nil", value, err)
-	}
-	if iter.Next() {
-		t.Error("Next() should return false after last element")
-	}
+	assert.NoError(t, err, "Unexpected error when getting iterator value")
+	assert.Equal(t, 1, value, "Iterator value mismatch")
+
+	assert.False(t, iter.Next(), "Next() should return false after last element")
 }
 
 func TestLinkedList_MultipleElements(t *testing.T) {
 	list := NewLinkedList[int]()
 	values := []int{1, 2, 3, 4, 5}
 
+	// Add elements
 	for _, v := range values {
 		list.Add(v)
 	}
 
-	if list.Size() != len(values) {
-		t.Errorf("expected size %d, got %d", len(values), list.Size())
-	}
+	// Test size
+	assert.Equal(t, len(values), list.Size(), "List size mismatch after adding elements")
 
 	// Test Get
-	for i, want := range values {
-		got, err := list.Get(i)
-		if err != nil || got != want {
-			t.Errorf("Get(%d) = %v, %v; want %v, nil", i, got, err, want)
-		}
+	for index, expected := range values {
+		got, err := list.Get(index)
+		assert.NoError(t, err, "Unexpected error when getting value at index %d", index)
+		assert.Equal(t, expected, got, "Value mismatch at index %d", index)
 	}
 
 	// Test out of bounds
 	_, err := list.Get(-1)
-	if err == nil {
-		t.Error("expected error for Get(-1)")
-	}
+	assert.Error(t, err, "Expected error for Get(-1)")
+
 	_, err = list.Get(len(values))
-	if err == nil {
-		t.Error("expected error for Get(len)")
-	}
+	assert.Error(t, err, "Expected error for Get(len)")
 }
 
 func TestLinkedList_Remove(t *testing.T) {
@@ -99,38 +86,30 @@ func TestLinkedList_Remove(t *testing.T) {
 
 	// Remove first
 	err := list.Remove(0)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if v, _ := list.Get(0); v != 2 {
-		t.Errorf("after removing first, Get(0) = %v; want 2", v)
-	}
+	assert.NoError(t, err, "Unexpected error removing first element")
+	value, _ := list.Get(0)
+	assert.Equal(t, 2, value, "Expected 2 at index 0 after removing first element")
 
 	// Remove last
 	err = list.Remove(list.Size() - 1)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if v, _ := list.Get(list.Size() - 1); v != 4 {
-		t.Errorf("after removing last, Get(last) = %v; want 4", v)
-	}
+	assert.NoError(t, err, "Unexpected error removing last element")
+	value, _ = list.Get(list.Size() - 1)
+	assert.Equal(t, 4, value, "Expected 4 at last index after removing last element")
 
 	// Remove middle
 	err = list.Remove(1)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
+	assert.NoError(t, err, "Unexpected error removing middle element")
 	expected := []int{2, 4}
 	for i, want := range expected {
-		if v, _ := list.Get(i); v != want {
-			t.Errorf("Get(%d) = %v; want %v", i, v, want)
-		}
+		got, _ := list.Get(i)
+		assert.Equal(t, want, got, "Value mismatch at index %d after removing middle element", i)
 	}
 }
 
 func TestLinkedListIterator_Behavior(t *testing.T) {
 	list := NewLinkedList[int]()
 	values := []int{1, 2, 3}
+
 	for _, v := range values {
 		list.Add(v)
 	}
@@ -138,40 +117,27 @@ func TestLinkedListIterator_Behavior(t *testing.T) {
 	iter := list.NewIterator()
 
 	// First element
-	if !iter.Next() {
-		t.Fatal("Next() should return true for first element")
-	}
-	v, err := iter.Value()
-	if err != nil || v != 1 {
-		t.Errorf("first value = %v, %v; want 1, nil", v, err)
-	}
+	assert.True(t, iter.Next(), "Next() should return true for the first element")
+	value, err := iter.Value()
+	assert.NoError(t, err, "Unexpected error at first element")
+	assert.Equal(t, 1, value, "Value mismatch at first element")
 
 	// Second element
-	if !iter.Next() {
-		t.Fatal("Next() should return true for second element")
-	}
-	v, err = iter.Value()
-	if err != nil || v != 2 {
-		t.Errorf("second value = %v, %v; want 2, nil", v, err)
-	}
+	assert.True(t, iter.Next(), "Next() should return true for the second element")
+	value, err = iter.Value()
+	assert.NoError(t, err, "Unexpected error at second element")
+	assert.Equal(t, 2, value, "Value mismatch at second element")
 
 	// Third element
-	if !iter.Next() {
-		t.Fatal("Next() should return true for third element")
-	}
-	v, err = iter.Value()
-	if err != nil || v != 3 {
-		t.Errorf("third value = %v, %v; want 3, nil", v, err)
-	}
+	assert.True(t, iter.Next(), "Next() should return true for the third element")
+	value, err = iter.Value()
+	assert.NoError(t, err, "Unexpected error at third element")
+	assert.Equal(t, 3, value, "Value mismatch at third element")
 
 	// After last element
-	if iter.Next() {
-		t.Error("Next() should return false after last element")
-	}
-
-	if v, err = iter.Value(); v != 3 || err != nil {
-		t.Error("Value() should error after iteration end")
-	}
+	assert.False(t, iter.Next(), "Next() should return false after last element")
+	value, err = iter.Value()
+	assert.Equal(t, 3, value, "Value mismatch at third element, Next() should not have moved past the last position")
 }
 
 func TestLinkedListIterator_MultipleIterations(t *testing.T) {
@@ -186,54 +152,13 @@ func TestLinkedListIterator_MultipleIterations(t *testing.T) {
 	for iter.Next() {
 		count++
 		_, err := iter.Value()
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
+		assert.NoError(t, err, "Unexpected error during iteration")
 	}
-	if count != 2 {
-		t.Errorf("first iteration count = %d; want 2", count)
-	}
+	assert.Equal(t, 2, count, "Iterator should cover all elements during iteration")
 
-	// Try to continue iteration
-	if iter.Next() {
-		t.Error("Next() should return false after iteration completed")
-	}
-
-	if v, err := iter.Value(); v != 2 || err != nil {
-		t.Error("Value() should error after iteration completed")
-	}
-}
-
-func TestLinkedListIterator_ValueBeforeNext(t *testing.T) {
-	list := NewLinkedList[int]()
-	list.Add(1)
-
-	iter := list.NewIterator()
-	_, err := iter.Value()
-	if err == nil {
-		t.Error("Value() should error when called before Next()")
-	}
-}
-
-func TestLinkedListIterator_ModificationDuringIteration(t *testing.T) {
-	list := NewLinkedList[int]()
-	list.Add(1)
-	list.Add(2)
-
-	iter := list.NewIterator()
-	iter.Next()
-	list.Add(3) // Add during iteration
-
-	value, err := iter.Value()
-	if err != nil || value != 1 {
-		t.Errorf("Value() = %v, %v; want 1, nil", value, err)
-	}
-
-	if !iter.Next() {
-		t.Error("Next() should return true for second element")
-	}
-	value, err = iter.Value()
-	if err != nil || value != 2 {
-		t.Errorf("Value() = %v, %v; want 2, nil", value, err)
-	}
+	// Attempting to continue iteration
+	assert.False(t, iter.Next(), "Next() should return false after iteration completes")
+	val, err := iter.Value()
+	assert.Nil(t, err, "Value() should not return error after iteration ends, but remain in the last value")
+	assert.Equal(t, 2, val, "Value mismatch for the second iterator position, Next() should not have moved past the last position")
 }

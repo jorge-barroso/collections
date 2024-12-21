@@ -2,6 +2,8 @@ package hashing
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Hypothetical FNVHash function or method
@@ -15,17 +17,16 @@ func TestFNVHash_IntValues(t *testing.T) {
 
 	for _, val := range input {
 		hash := hasher.Hash(val)
-		if _, exists := hashes[val]; exists {
-			t.Errorf("Hash for input %d already exists", val)
-		}
+		_, exists := hashes[val]
+		assert.False(t, exists, "Hash for input %d already exists", val)
 		hashes[val] = hash
 	}
 
 	// Ensure no two different inputs have the same hash
 	for i, h1 := range hashes {
 		for j, h2 := range hashes {
-			if i != j && h1 == h2 {
-				t.Errorf("Hashes collision detected between %d and %d (hash: %d)", i, j, h1)
+			if i != j {
+				assert.NotEqual(t, h1, h2, "Hashes collision detected between %d and %d (hash: %d)", i, j, h1)
 			}
 		}
 	}
@@ -40,17 +41,16 @@ func TestFNVHash_StringValues(t *testing.T) {
 
 	for _, str := range strings {
 		hash := hasher.Hash(str)
-		if _, exists := hashes[str]; exists {
-			t.Errorf("Hash for input %q already exists", str)
-		}
+		_, exists := hashes[str]
+		assert.False(t, exists, "Hash for input %q already exists", str)
 		hashes[str] = hash
 	}
 
 	// Ensure no two different inputs have the same hash
 	for i, h1 := range hashes {
 		for j, h2 := range hashes {
-			if i != j && h1 == h2 {
-				t.Errorf("Hashes collision detected between %q and %q (hash: %d)", i, j, h1)
+			if i != j {
+				assert.NotEqual(t, h1, h2, "Hashes collision detected between %q and %q (hash: %d)", i, j, h1)
 			}
 		}
 	}
@@ -64,9 +64,7 @@ func TestFNVHash_EmptyValue(t *testing.T) {
 	anotherEmptyHash := hasher.Hash("")
 
 	// Ensure hashing the same empty input gives the same result
-	if emptyHash != anotherEmptyHash {
-		t.Errorf("Hash mismatch for empty values: %d, %d", emptyHash, anotherEmptyHash)
-	}
+	assert.Equal(t, emptyHash, anotherEmptyHash)
 }
 
 func TestFNVHash_DifferentTypes(t *testing.T) {
@@ -78,7 +76,5 @@ func TestFNVHash_DifferentTypes(t *testing.T) {
 	intHash := intHasher.Hash(123)
 	stringHash := stringHasher.Hash("123")
 
-	if intHash == stringHash {
-		t.Errorf("Hashes between int '123' and string '123' unexpectedly match: %d", intHash)
-	}
+	assert.NotEqual(t, intHash, stringHash)
 }

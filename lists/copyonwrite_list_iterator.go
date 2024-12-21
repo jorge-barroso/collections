@@ -11,19 +11,19 @@ type CopyOnWriteListIterator[T any] struct {
 }
 
 // Next advances the iterator to the next element
-func (it *CopyOnWriteListIterator[T]) Next() bool {
-	if it.index+1 < len(it.snapshot) {
-		it.index++
+func (cIt *CopyOnWriteListIterator[T]) Next() bool {
+	if cIt.index+1 < len(cIt.snapshot) {
+		cIt.index++
 		return true
 	}
 	return false
 }
 
 // Value returns the current element in the iteration
-func (it *CopyOnWriteListIterator[T]) Value() (T, error) {
-	if it.index < 0 {
+func (cIt *CopyOnWriteListIterator[T]) Value() (T, error) {
+	if cIt.index < 0 {
 		var zero T
-		return zero, errors.New("no more elements")
+		return zero, errors.New("no more elements, call Next() first")
 	}
-	return it.snapshot[it.index], nil
+	return cIt.snapshot[cIt.index], nil
 }

@@ -30,63 +30,63 @@ func NewCopyOnWriteList[T any]() *CopyOnWriteList[T] {
 }
 
 // Add appends an item to the end of the list
-func (l *CopyOnWriteList[T]) Add(item T) {
-	l.lock.Lock()
-	defer l.lock.Unlock()
+func (c *CopyOnWriteList[T]) Add(item T) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 
 	// Create a new slice with one more capacity
-	newElements := make([]T, len(l.elements)+1)
+	newElements := make([]T, len(c.elements)+1)
 	// Copy existing elements
-	copy(newElements, l.elements)
+	copy(newElements, c.elements)
 	// Add new element
-	newElements[len(l.elements)] = item
+	newElements[len(c.elements)] = item
 	// Replace old slice with new one
-	l.elements = newElements
+	c.elements = newElements
 }
 
 // Remove removes an item at the specified index
-func (l *CopyOnWriteList[T]) Remove(index int) error {
-	l.lock.Lock()
-	defer l.lock.Unlock()
+func (c *CopyOnWriteList[T]) Remove(index int) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 
-	if err := l.validateIndex(index, l.Size()); err != nil {
+	if err := c.validateIndex(index, c.Size()); err != nil {
 		return err
 	}
 
 	// Create new slice with one less capacity
-	newElements := make([]T, len(l.elements)-1)
+	newElements := make([]T, len(c.elements)-1)
 	// Copy elements before index
-	copy(newElements, l.elements[:index])
+	copy(newElements, c.elements[:index])
 	// Copy elements after index
-	copy(newElements[index:], l.elements[index+1:])
+	copy(newElements[index:], c.elements[index+1:])
 	// Replace old slice with new one
-	l.elements = newElements
+	c.elements = newElements
 	return nil
 }
 
 // Get retrieves an element by its index
-func (l *CopyOnWriteList[T]) Get(index int) (T, error) {
+func (c *CopyOnWriteList[T]) Get(index int) (T, error) {
 	// No lock needed for reads
-	if err := l.validateIndex(index, l.Size()); err != nil {
+	if err := c.validateIndex(index, c.Size()); err != nil {
 		var zeroValue T
 		return zeroValue, err
 	}
 
-	return l.elements[index], nil
+	return c.elements[index], nil
 }
 
 // Size returns the number of elements in the list
-func (l *CopyOnWriteList[T]) Size() int {
-	return len(l.elements)
+func (c *CopyOnWriteList[T]) Size() int {
+	return len(c.elements)
 }
 
 // NewIterator returns a new iterator for the list
-func (l *CopyOnWriteList[T]) NewIterator() collections.Iterator[T] {
+func (c *CopyOnWriteList[T]) NewIterator() collections.Iterator[T] {
 	// Create a snapshot of current elements
-	l.lock.Lock()
-	snapshot := make([]T, len(l.elements))
-	copy(snapshot, l.elements)
-	l.lock.Unlock()
+	c.lock.Lock()
+	snapshot := make([]T, len(c.elements))
+	copy(snapshot, c.elements)
+	c.lock.Unlock()
 
 	return &CopyOnWriteListIterator[T]{
 		snapshot: snapshot,
