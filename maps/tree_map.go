@@ -8,9 +8,13 @@ import (
 // TreeMap implements a sorted map using a Red-Black tree
 type TreeMap[K comparable, V any] struct {
 	root *rbNode[K, V]
-	size int
+	size int64
 	less func(a, b K) bool // Comparison function for keys
 }
+
+// Ensure TreeMap implements both Map and Iterable interfaces
+var _ Map[string, int] = (*TreeMap[string, int])(nil)
+var _ collections.Iterable[Entry[string, int]] = (*TreeMap[string, int])(nil)
 
 // NewTreeMap creates a new TreeMap with a custom comparison function
 func NewTreeMap[K comparable, V any](less func(a, b K) bool) *TreeMap[K, V] {
@@ -63,7 +67,7 @@ func (t *TreeMap[K, V]) Remove(key K) error {
 }
 
 // Size returns the number of key-value pairs
-func (t *TreeMap[K, V]) Size() int {
+func (t *TreeMap[K, V]) Size() int64 {
 	return t.size
 }
 

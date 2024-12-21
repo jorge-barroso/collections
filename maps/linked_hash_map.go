@@ -10,8 +10,12 @@ type LinkedHashMap[K comparable, V any] struct {
 	items map[K]*collections.Node[Entry[K, V]]
 	head  *collections.Node[Entry[K, V]]
 	tail  *collections.Node[Entry[K, V]]
-	size  int
+	size  int64
 }
+
+// Ensure LinkedHashMap implements both Map and Iterable interfaces
+var _ Map[string, int] = (*LinkedHashMap[string, int])(nil)
+var _ collections.Iterable[Entry[string, int]] = (*LinkedHashMap[string, int])(nil)
 
 // NewLinkedHashMap creates a new LinkedHashMap
 func NewLinkedHashMap[K comparable, V any]() *LinkedHashMap[K, V] {
@@ -109,7 +113,7 @@ func (m *LinkedHashMap[K, V]) Remove(key K) error {
 }
 
 // Size returns the number of key-value pairs
-func (m *LinkedHashMap[K, V]) Size() int {
+func (m *LinkedHashMap[K, V]) Size() int64 {
 	return m.size
 }
 
