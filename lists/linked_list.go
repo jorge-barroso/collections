@@ -1,12 +1,12 @@
 package lists
 
 import (
-	"fmt"
 	"github.com/jorge-barroso/collections"
 )
 
 // LinkedList represents a singly linked list
 type LinkedList[T any] struct {
+	listOps[T]
 	head *collections.Node[T]
 	size int
 }
@@ -44,8 +44,8 @@ func (ll *LinkedList[T]) Add(value T) {
 
 // Remove removes an element at the specified index
 func (ll *LinkedList[T]) Remove(index int) error {
-	if index < 0 || index >= ll.size {
-		return fmt.Errorf("index out of bounds, must be between 0 and %d, but was %d", ll.size-1, index)
+	if err := ll.validateIndex(index, ll.Size()); err != nil {
+		return err
 	}
 
 	if index == 0 {
@@ -63,9 +63,9 @@ func (ll *LinkedList[T]) Remove(index int) error {
 
 // Get retrieves an element by its index
 func (ll *LinkedList[T]) Get(index int) (T, error) {
-	if index < 0 || index >= ll.size {
+	if err := ll.validateIndex(index, ll.Size()); err != nil {
 		var zeroValue T
-		return zeroValue, fmt.Errorf("index out of bounds, must be between 0 and %d, but was %d", ll.size-1, index)
+		return zeroValue, err
 	}
 
 	current := ll.head

@@ -1,7 +1,6 @@
 package lists
 
 import (
-	"errors"
 	"github.com/jorge-barroso/collections"
 	"sync"
 )
@@ -9,6 +8,7 @@ import (
 // CopyOnWriteList is a thread-safe list implementation that creates a new
 // copy of the underlying array whenever the list is modified
 type CopyOnWriteList[T any] struct {
+	listOps[T]
 	lock     sync.Mutex
 	elements []T
 }
@@ -49,8 +49,8 @@ func (l *CopyOnWriteList[T]) Remove(index int) error {
 	l.lock.Lock()
 	defer l.lock.Unlock()
 
-	if index < 0 || index >= len(l.elements) {
-		return errors.New("index out of bounds")
+	if err := l.validateIndex(index, l.Size()); err != nil {
+		return err
 	}
 
 	// Create new slice with one less capacity
@@ -67,10 +67,9 @@ func (l *CopyOnWriteList[T]) Remove(index int) error {
 // Get retrieves an element by its index
 func (l *CopyOnWriteList[T]) Get(index int) (T, error) {
 	// No lock needed for reads
-
-	var zeroValue T
-	if index < 0 || index >= len(l.elements) {
-		return zeroValue, errors.New("index out of bounds")
+	if err := l.validateIndex(index, l.Size()); err != nil {
+		var zeroValue T
+		return zeroValue, err
 	}
 
 	return l.elements[index], nil

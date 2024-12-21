@@ -1,12 +1,12 @@
 package lists
 
 import (
-	"errors"
 	"github.com/jorge-barroso/collections"
 )
 
 // ArrayList implementation using generics
 type ArrayList[T any] struct {
+	listOps[T]
 	elements []T
 }
 
@@ -33,8 +33,8 @@ func (a *ArrayList[T]) Add(item T) {
 
 // Remove removes element at specified index
 func (a *ArrayList[T]) Remove(index int) error {
-	if index < 0 || index >= len(a.elements) {
-		return errors.New("index out of bounds")
+	if err := a.validateIndex(index, a.Size()); err != nil {
+		return err
 	}
 	a.elements = append(a.elements[:index], a.elements[index+1:]...)
 	return nil
@@ -42,10 +42,11 @@ func (a *ArrayList[T]) Remove(index int) error {
 
 // Get retrieves an element by its index
 func (a *ArrayList[T]) Get(index int) (T, error) {
-	var zeroValue T
-	if index < 0 || index >= len(a.elements) {
-		return zeroValue, errors.New("index out of bounds")
+	if err := a.validateIndex(index, a.Size()); err != nil {
+		var zeroValue T
+		return zeroValue, err
 	}
+
 	return a.elements[index], nil
 }
 
