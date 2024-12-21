@@ -8,6 +8,9 @@ import (
 // FNVHash implements the FNV-1a hash algorithm
 type FNVHash[K comparable] struct{}
 
+// Ensure LinkedList implements both Map and Iterable interfaces
+var _ HashFunction[int] = (*FNVHash[int])(nil)
+
 // NewFNVHash creates a new FNV hash function
 func NewFNVHash[K comparable]() *FNVHash[K] {
 	return &FNVHash[K]{}

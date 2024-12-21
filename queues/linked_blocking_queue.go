@@ -17,6 +17,9 @@ type LinkedBlockingQueue[T any] struct {
 	notEmpty *sync.Cond           // Condition variable for signaling item availability
 }
 
+// Ensure LinkedBlockingQueue implements both Map and Iterable interfaces
+var _ BlockingQueue[int] = (*LinkedBlockingQueue[int])(nil)
+
 // NewLinkedBlockingQueue creates a new LinkedBlockingQueue with the specified capacity.
 func NewLinkedBlockingQueue[T any](capacity int) *LinkedBlockingQueue[T] {
 	mutex := &sync.Mutex{}

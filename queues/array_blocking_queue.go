@@ -18,6 +18,9 @@ type ArrayBlockingQueue[T any] struct {
 	notEmpty *sync.Cond
 }
 
+// Ensure ArrayBlockingQueue implements both Map and Iterable interfaces
+var _ BlockingQueue[int] = (*ArrayBlockingQueue[int])(nil)
+
 // NewArrayBlockingQueue creates a new ArrayBlockingQueue with the specified capacity.
 // The queue blocks operations when it is full or empty.
 func NewArrayBlockingQueue[T any](capacity int) *ArrayBlockingQueue[T] {

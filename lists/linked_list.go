@@ -11,6 +11,10 @@ type LinkedList[T any] struct {
 	size int
 }
 
+// Ensure LinkedList implements both Map and Iterable interfaces
+var _ List[int] = (*LinkedList[int])(nil)
+var _ collections.Iterable[int] = (*LinkedList[int])(nil)
+
 // NewLinkedList creates and returns a new instance of LinkedList
 func NewLinkedList[T any]() *LinkedList[T] {
 	return &LinkedList[T]{}
