@@ -3,6 +3,8 @@ package queues
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArrayBlockingQueue_PutAndTake(t *testing.T) {
@@ -10,116 +12,80 @@ func TestArrayBlockingQueue_PutAndTake(t *testing.T) {
 
 	// Test basic put and take operations
 	go func() {
-		if err := queue.Put(1); err != nil {
-			t.Errorf("unexpected error on Put: %v", err)
-		}
-		if err := queue.Put(2); err != nil {
-			t.Errorf("unexpected error on Put: %v", err)
-		}
-		if err := queue.Put(3); err != nil {
-			t.Errorf("unexpected error on Put: %v", err)
-		}
+		assert.NoError(t, queue.Put(1), "Unexpected error on Put")
+		assert.NoError(t, queue.Put(2), "Unexpected error on Put")
+		assert.NoError(t, queue.Put(3), "Unexpected error on Put")
 	}()
 
-	time.Sleep(100 * time.Millisecond) // Allow some time for goroutine to execute
+	time.Sleep(100 * time.Millisecond) // Allow goroutine to execute
 
 	value, err := queue.Take()
-	if err != nil || value != 1 {
-		t.Errorf("expected 1, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Take")
+	assert.Equal(t, 1, value, "Value mismatch on Take")
 
 	value, err = queue.Take()
-	if err != nil || value != 2 {
-		t.Errorf("expected 2, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Take")
+	assert.Equal(t, 2, value, "Value mismatch on Take")
 
 	value, err = queue.Take()
-	if err != nil || value != 3 {
-		t.Errorf("expected 3, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Take")
+	assert.Equal(t, 3, value, "Value mismatch on Take")
 }
 
 func TestArrayBlockingQueue_OfferAndPoll(t *testing.T) {
 	queue := NewArrayBlockingQueue[int](2)
 
-	if err := queue.Offer(1); err != nil {
-		t.Errorf("unexpected error on Offer: %v", err)
-	}
-
-	if err := queue.Offer(2); err != nil {
-		t.Errorf("unexpected error on Offer: %v", err)
-	}
+	assert.NoError(t, queue.Offer(1), "Unexpected error on Offer")
+	assert.NoError(t, queue.Offer(2), "Unexpected error on Offer")
 
 	// Should return an error since the queue is full
-	if err := queue.Offer(3); err == nil {
-		t.Errorf("expected error on Offer when full, got none")
-	}
+	err := queue.Offer(3)
+	assert.Error(t, err, "Expected error on Offer when full")
 
 	value, err := queue.Poll()
-	if err != nil || value != 1 {
-		t.Errorf("expected 1, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Poll")
+	assert.Equal(t, 1, value, "Value mismatch on Poll")
 
 	value, err = queue.Poll()
-	if err != nil || value != 2 {
-		t.Errorf("expected 2, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Poll")
+	assert.Equal(t, 2, value, "Value mismatch on Poll")
 
 	// Should return an error since the queue is empty
-	if _, err := queue.Poll(); err == nil {
-		t.Errorf("expected error on Poll when empty, got none")
-	}
+	_, err = queue.Poll()
+	assert.Error(t, err, "Expected error on Poll when empty")
 }
 
 func TestArrayBlockingQueue_Peek(t *testing.T) {
 	queue := NewArrayBlockingQueue[int](2)
 
-	if _, err := queue.Peek(); err == nil {
-		t.Errorf("expected error on Peek when empty, got none")
-	}
+	_, err := queue.Peek()
+	assert.Error(t, err, "Expected error on Peek when empty")
 
-	if err := queue.Offer(1); err != nil {
-		t.Errorf("unexpected error on Offer: %v", err)
-	}
+	assert.NoError(t, queue.Offer(1), "Unexpected error on Offer")
 
 	value, err := queue.Peek()
-	if err != nil || value != 1 {
-		t.Errorf("expected 1, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Peek")
+	assert.Equal(t, 1, value, "Value mismatch on Peek")
 
-	if err := queue.Offer(2); err != nil {
-		t.Errorf("unexpected error on Offer: %v", err)
-	}
+	assert.NoError(t, queue.Offer(2), "Unexpected error on Offer")
 
 	value, err = queue.Peek()
-	if err != nil || value != 1 {
-		t.Errorf("expected 1 again, got %d", value)
-	}
+	assert.NoError(t, err, "Unexpected error on Peek")
+	assert.Equal(t, 1, value, "Expected Peek to return the same first value")
 }
 
 func TestArrayBlockingQueue_Dump(t *testing.T) {
 	queue := NewArrayBlockingQueue[int](5)
 
 	for i := 1; i <= 3; i++ {
-		if err := queue.Put(i); err != nil {
-			t.Errorf("unexpected error on Put: %v", err)
-		}
+		assert.NoError(t, queue.Put(i), "Unexpected error on Put")
 	}
 
 	dumpedItems := queue.Dump()
 	expected := []int{1, 2, 3}
 
-	if len(dumpedItems) != len(expected) {
-		t.Errorf("expected dump length %d, got %d", len(expected), len(dumpedItems))
-	}
+	assert.Equal(t, expected, dumpedItems, "Dumped items mismatch")
 
-	for i, v := range dumpedItems {
-		if v != expected[i] {
-			t.Errorf("expected %d at index %d, got %d", expected[i], i, v)
-		}
-	}
-
-	if _, err := queue.Poll(); err == nil {
-		t.Errorf("expected error on Poll after dump, got none")
-	}
+	_, err := queue.Poll()
+	assert.Error(t, err, "Expected error on Poll after dump")
 }
