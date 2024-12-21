@@ -21,7 +21,8 @@ type ConcurrentHashMap[K comparable, V any] struct {
 	shards    [ShardCount]mapShard[K, V]
 	size      int64
 	sizeMutex sync.RWMutex
-	hashFunc  hashing.HashFunction[K]
+	//globalMux sync.RWMutex // New global lock
+	hashFunc hashing.HashFunction[K]
 }
 
 // Ensure ConcurrentHashMap implements both Map and Iterable interfaces
@@ -55,24 +56,25 @@ func (cm *ConcurrentHashMap[K, V]) getShard(key K) *mapShard[K, V] {
 // Put adds or updates a key-value pair
 func (cm *ConcurrentHashMap[K, V]) Put(key K, value V) {
 	shard := cm.getShard(key)
-	shard.Lock()
-	defer shard.Unlock()
+	shard.Lock()         // Acquire write lock to modify shard
+	defer shard.Unlock() // Release write lock after operation
 
 	_, exists := shard.items[key]
 	if !exists {
+		// Update total size safely if the key is new
 		cm.sizeMutex.Lock()
 		cm.size++
 		cm.sizeMutex.Unlock()
 	}
 
-	shard.items[key] = value
+	shard.items[key] = value // Add or update the key-value pair in the shard
 }
 
 // Get retrieves a value by key
 func (cm *ConcurrentHashMap[K, V]) Get(key K) (V, error) {
 	shard := cm.getShard(key)
-	shard.RLock()
-	defer shard.RUnlock()
+	shard.RLock()         // Acquire read lock to safely access shard
+	defer shard.RUnlock() // Release read lock after operation
 
 	value, ok := shard.items[key]
 	if !ok {
@@ -85,14 +87,15 @@ func (cm *ConcurrentHashMap[K, V]) Get(key K) (V, error) {
 // Remove deletes a key-value pair
 func (cm *ConcurrentHashMap[K, V]) Remove(key K) error {
 	shard := cm.getShard(key)
-	shard.Lock()
-	defer shard.Unlock()
+	shard.Lock()         // Acquire write lock to modify shard
+	defer shard.Unlock() // Release write lock after modification
 
 	if _, exists := shard.items[key]; !exists {
 		return errors.New("key not found")
 	}
 
-	delete(shard.items, key)
+	delete(shard.items, key) // Remove the key-value pair
+	// Safely decrement the size
 	cm.sizeMutex.Lock()
 	cm.size--
 	cm.sizeMutex.Unlock()
@@ -100,30 +103,31 @@ func (cm *ConcurrentHashMap[K, V]) Remove(key K) error {
 }
 
 // Size returns the total number of elements across all shards
-func (cm *ConcurrentHashMap[K, V]) Size() int {
-	cm.sizeMutex.RLock()
-	defer cm.sizeMutex.RUnlock()
-	return int(cm.size)
+func (cm *ConcurrentHashMap[K, V]) Size() int64 {
+	cm.sizeMutex.RLock()         // Acquire read lock for size
+	defer cm.sizeMutex.RUnlock() // Release lock after reading size
+	return cm.size
 }
 
 // Clear removes all elements from the map
 func (cm *ConcurrentHashMap[K, V]) Clear() {
+	cm.sizeMutex.Lock()         // Lock size for updating
+	defer cm.sizeMutex.Unlock() // Unlock after clearing
+
+	cm.size = 0 // Reset the total size
 	for i := 0; i < ShardCount; i++ {
 		shard := &cm.shards[i]
-		shard.Lock()
-		shard.items = make(map[K]V)
-		shard.Unlock()
+		shard.Lock()                // Acquire write lock to block all reads/writes
+		shard.items = make(map[K]V) // Clear the shard's map
+		shard.Unlock()              // Release lock after clearing
 	}
-	cm.sizeMutex.Lock()
-	cm.size = 0
-	cm.sizeMutex.Unlock()
 }
 
 // ContainsKey checks if a key exists in the map
 func (cm *ConcurrentHashMap[K, V]) ContainsKey(key K) bool {
 	shard := cm.getShard(key)
-	shard.RLock()
-	defer shard.RUnlock()
+	shard.RLock()         // Acquire read lock for safe access
+	defer shard.RUnlock() // Release read lock after check
 	_, exists := shard.items[key]
 	return exists
 }

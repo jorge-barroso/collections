@@ -17,6 +17,7 @@ func (it *ConcurrentHashMapIterator[K, V]) loadNextShard() {
 	for it.currentShard < ShardCount {
 		shard := &it.cm.shards[it.currentShard]
 		shard.RLock()
+
 		entries := make([]Entry[K, V], 0, len(shard.items))
 		for k, v := range shard.items {
 			entries = append(entries, Entry[K, V]{key: k, value: v})
