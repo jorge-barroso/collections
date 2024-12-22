@@ -1,12 +1,11 @@
 package queues
 
 import (
-	"errors"
 	"sync"
 )
 
-// BaseBlockingQueue provides common functionality for blocking queue implementations
-type BaseBlockingQueue[T any] struct {
+// baseBlockingQueue provides common functionality for blocking queue implementations
+type baseBlockingQueue[T any] struct {
 	count    int         // Current number of elements
 	capacity int         // Maximum capacity
 	mutex    *sync.Mutex // Synchronization lock
@@ -14,10 +13,10 @@ type BaseBlockingQueue[T any] struct {
 	notEmpty *sync.Cond  // Signaled when queue becomes not empty
 }
 
-// NewBaseBlockingQueue creates a new abstract queue with the given capacity
-func NewBaseBlockingQueue[T any](capacity int) BaseBlockingQueue[T] {
+// newBaseBlockingQueue creates a new abstract queue with the given capacity
+func newBaseBlockingQueue[T any](capacity int) baseBlockingQueue[T] {
 	mutex := &sync.Mutex{}
-	return BaseBlockingQueue[T]{
+	return baseBlockingQueue[T]{
 		capacity: capacity,
 		mutex:    mutex,
 		notFull:  sync.NewCond(mutex),
@@ -26,84 +25,84 @@ func NewBaseBlockingQueue[T any](capacity int) BaseBlockingQueue[T] {
 }
 
 // Lock acquires the mutex
-func (q *BaseBlockingQueue[T]) Lock() {
+func (q *baseBlockingQueue[T]) Lock() {
 	q.mutex.Lock()
 }
 
 // Unlock releases the mutex
-func (q *BaseBlockingQueue[T]) Unlock() {
+func (q *baseBlockingQueue[T]) Unlock() {
 	q.mutex.Unlock()
 }
 
 // IsFull checks if the queue is at capacity
-func (q *BaseBlockingQueue[T]) IsFull() bool {
+func (q *baseBlockingQueue[T]) IsFull() bool {
 	return q.count == q.capacity
 }
 
 // IsEmpty checks if the queue is empty
-func (q *BaseBlockingQueue[T]) IsEmpty() bool {
+func (q *baseBlockingQueue[T]) IsEmpty() bool {
 	return q.count == 0
 }
 
 // WaitNotFull waits until the queue is not full
-func (q *BaseBlockingQueue[T]) WaitNotFull() {
+func (q *baseBlockingQueue[T]) WaitNotFull() {
 	for q.IsFull() {
 		q.notFull.Wait()
 	}
 }
 
 // WaitNotEmpty waits until the queue is not empty
-func (q *BaseBlockingQueue[T]) WaitNotEmpty() {
+func (q *baseBlockingQueue[T]) WaitNotEmpty() {
 	for q.IsEmpty() {
 		q.notEmpty.Wait()
 	}
 }
 
 // IncrementCount increases the count and signals waiting consumers
-func (q *BaseBlockingQueue[T]) IncrementCount() {
+func (q *baseBlockingQueue[T]) IncrementCount() {
 	q.count++
 	q.notEmpty.Signal()
 }
 
 // DecrementCount decreases the count and signals waiting producers
-func (q *BaseBlockingQueue[T]) DecrementCount() {
+func (q *baseBlockingQueue[T]) DecrementCount() {
 	q.count--
 	q.notFull.Signal()
 }
 
 // SignalAllNotFull broadcasts to all waiting producers
-func (q *BaseBlockingQueue[T]) SignalAllNotFull() {
+func (q *baseBlockingQueue[T]) SignalAllNotFull() {
 	q.notFull.Broadcast()
 }
 
 // GetCount returns the current number of elements
-func (q *BaseBlockingQueue[T]) GetCount() int {
+func (q *baseBlockingQueue[T]) GetCount() int {
 	return q.count
 }
 
 // GetCapacity returns the maximum capacity
-func (q *BaseBlockingQueue[T]) GetCapacity() int {
+func (q *baseBlockingQueue[T]) GetCapacity() int {
 	return q.capacity
 }
 
 // CheckEmpty returns an error if the queue is empty
-func (q *BaseBlockingQueue[T]) CheckEmpty() error {
+func (q *baseBlockingQueue[T]) CheckEmpty() error {
 	if q.IsEmpty() {
-		return errors.New("queue empty")
+		return errQueueEmpty
 	}
 	return nil
 }
 
 // CheckFull returns an error if the queue is full
-func (q *BaseBlockingQueue[T]) CheckFull() error {
+func (q *baseBlockingQueue[T]) CheckFull() error {
 	if q.IsFull() {
-		return errors.New("queue full")
+		return errQueueFull
 	}
 	return nil
 }
 
 // Reset resets the queue to empty state
-func (q *BaseBlockingQueue[T]) Reset() {
+func (q *baseBlockingQueue[T]) Reset() {
 	q.count = 0
 	q.SignalAllNotFull()
 }

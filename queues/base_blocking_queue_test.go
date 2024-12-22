@@ -19,23 +19,23 @@ func TestBaseBlockingQueue_New(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queue := NewBaseBlockingQueue[int](tt.capacity)
+			queue := newBaseBlockingQueue[int](tt.capacity)
 			if queue.capacity != tt.capacity {
-				t.Errorf("NewBaseBlockingQueue(%d) capacity = %d; want %d",
+				t.Errorf("newBaseBlockingQueue(%d) capacity = %d; want %d",
 					tt.capacity, queue.capacity, tt.capacity)
 			}
 			if queue.count != 0 {
-				t.Errorf("NewBaseBlockingQueue(%d) count = %d; want 0",
+				t.Errorf("newBaseBlockingQueue(%d) count = %d; want 0",
 					tt.capacity, queue.count)
 			}
 			if queue.mutex == nil {
-				t.Error("NewBaseBlockingQueue() mutex is nil")
+				t.Error("newBaseBlockingQueue() mutex is nil")
 			}
 			if queue.notFull == nil {
-				t.Error("NewBaseBlockingQueue() notFull condition is nil")
+				t.Error("newBaseBlockingQueue() notFull condition is nil")
 			}
 			if queue.notEmpty == nil {
-				t.Error("NewBaseBlockingQueue() notEmpty condition is nil")
+				t.Error("newBaseBlockingQueue() notEmpty condition is nil")
 			}
 		})
 	}
@@ -43,7 +43,7 @@ func TestBaseBlockingQueue_New(t *testing.T) {
 
 // TestBaseBlockingQueue_Lock tests mutex operations
 func TestBaseBlockingQueue_Lock(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](5)
+	queue := newBaseBlockingQueue[int](5)
 
 	// Test basic lock/unlock
 	queue.Lock()
@@ -87,7 +87,7 @@ func TestBaseBlockingQueue_IsFull(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queue := NewBaseBlockingQueue[int](tt.capacity)
+			queue := newBaseBlockingQueue[int](tt.capacity)
 			queue.count = tt.count
 
 			if got := queue.IsFull(); got != tt.wantFull {
@@ -103,7 +103,7 @@ func TestBaseBlockingQueue_IsFull(t *testing.T) {
 
 // TestBaseBlockingQueue_WaitNotFull tests waiting for space
 func TestBaseBlockingQueue_WaitNotFull(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](1)
+	queue := newBaseBlockingQueue[int](1)
 	done := make(chan bool)
 
 	queue.count = queue.capacity
@@ -131,7 +131,7 @@ func TestBaseBlockingQueue_WaitNotFull(t *testing.T) {
 
 // TestBaseBlockingQueue_WaitNotEmpty tests waiting for items
 func TestBaseBlockingQueue_WaitNotEmpty(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](1)
+	queue := newBaseBlockingQueue[int](1)
 	done := make(chan bool)
 
 	queue.count = 0
@@ -159,7 +159,7 @@ func TestBaseBlockingQueue_WaitNotEmpty(t *testing.T) {
 
 // TestBaseBlockingQueue_IncrementCount tests increment operation
 func TestBaseBlockingQueue_IncrementCount(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](5)
+	queue := newBaseBlockingQueue[int](5)
 	initial := queue.count
 
 	queue.Lock()
@@ -173,7 +173,7 @@ func TestBaseBlockingQueue_IncrementCount(t *testing.T) {
 
 // TestBaseBlockingQueue_DecrementCount tests decrement operation
 func TestBaseBlockingQueue_DecrementCount(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](5)
+	queue := newBaseBlockingQueue[int](5)
 	queue.Lock()
 	queue.count = 2
 	queue.DecrementCount()
@@ -186,7 +186,7 @@ func TestBaseBlockingQueue_DecrementCount(t *testing.T) {
 
 // TestBaseBlockingQueue_CheckEmpty tests empty state validation
 func TestBaseBlockingQueue_CheckEmpty(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](2)
+	queue := newBaseBlockingQueue[int](2)
 
 	if err := queue.CheckEmpty(); err == nil {
 		t.Error("CheckEmpty() on empty queue should return error")
@@ -200,7 +200,7 @@ func TestBaseBlockingQueue_CheckEmpty(t *testing.T) {
 
 // TestBaseBlockingQueue_CheckFull tests full state validation
 func TestBaseBlockingQueue_CheckFull(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](2)
+	queue := newBaseBlockingQueue[int](2)
 	queue.count = queue.capacity
 
 	if err := queue.CheckFull(); err == nil {
@@ -215,7 +215,7 @@ func TestBaseBlockingQueue_CheckFull(t *testing.T) {
 
 // TestBaseBlockingQueue_Reset tests queue reset
 func TestBaseBlockingQueue_Reset(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](5)
+	queue := newBaseBlockingQueue[int](5)
 	queue.count = 3
 
 	queue.Reset()
@@ -243,7 +243,7 @@ func TestBaseBlockingQueue_Reset(t *testing.T) {
 
 // TestBaseBlockingQueue_GetCount tests count retrieval
 func TestBaseBlockingQueue_GetCount(t *testing.T) {
-	queue := NewBaseBlockingQueue[int](5)
+	queue := newBaseBlockingQueue[int](5)
 	queue.count = 3
 
 	if got := queue.GetCount(); got != 3 {
@@ -254,7 +254,7 @@ func TestBaseBlockingQueue_GetCount(t *testing.T) {
 // TestBaseBlockingQueue_GetCapacity tests capacity retrieval
 func TestBaseBlockingQueue_GetCapacity(t *testing.T) {
 	capacity := 5
-	queue := NewBaseBlockingQueue[int](capacity)
+	queue := newBaseBlockingQueue[int](capacity)
 
 	if got := queue.GetCapacity(); got != capacity {
 		t.Errorf("GetCapacity() = %d; want %d", got, capacity)

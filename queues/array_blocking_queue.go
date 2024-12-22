@@ -3,16 +3,18 @@ package queues
 // ArrayBlockingQueue is a thread-safe fixed size queue that blocks on full or
 // empty conditions when adding or removing elements respectively.
 type ArrayBlockingQueue[T any] struct {
-	BaseBlockingQueue[T]
+	baseBlockingQueue[T]
 	items []T
 	head  int
 	tail  int
 }
 
+var _ BlockingQueue[string] = &ArrayBlockingQueue[string]{}
+
 // NewArrayBlockingQueue creates a new ArrayBlockingQueue with the specified capacity
 func NewArrayBlockingQueue[T any](capacity int) *ArrayBlockingQueue[T] {
 	return &ArrayBlockingQueue[T]{
-		BaseBlockingQueue: NewBaseBlockingQueue[T](capacity),
+		baseBlockingQueue: newBaseBlockingQueue[T](capacity),
 		items:             make([]T, capacity),
 	}
 }
@@ -113,4 +115,27 @@ func (q *ArrayBlockingQueue[T]) Dump() []T {
 	q.Reset()
 
 	return dump
+}
+
+// Size returns the current number of elements in the queue
+func (q *ArrayBlockingQueue[T]) Size() int {
+	q.Lock()
+	defer q.Unlock()
+
+	return q.GetCount()
+}
+
+// Clear removes all elements from the queue
+func (q *ArrayBlockingQueue[T]) Clear() {
+	q.Lock()
+	defer q.Unlock()
+
+	// Clear the queue
+	var zeroValue T
+	for i := range q.items {
+		q.items[i] = zeroValue
+	}
+	q.head = 0
+	q.tail = 0
+	q.Reset()
 }

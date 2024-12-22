@@ -4,7 +4,7 @@ import "github.com/jorge-barroso/collections"
 
 // LinkedBlockingQueue is a thread-safe queue with a fixed capacity that uses linked nodes.
 type LinkedBlockingQueue[T any] struct {
-	BaseBlockingQueue[T]
+	baseBlockingQueue[T]
 	head *collections.Node[T] // Points to the first Node in the queue
 	tail *collections.Node[T] // Points to the last Node in the queue
 }
@@ -15,7 +15,7 @@ var _ BlockingQueue[int] = (*LinkedBlockingQueue[int])(nil)
 // NewLinkedBlockingQueue creates a new LinkedBlockingQueue with the specified capacity
 func NewLinkedBlockingQueue[T any](capacity int) *LinkedBlockingQueue[T] {
 	return &LinkedBlockingQueue[T]{
-		BaseBlockingQueue: NewBaseBlockingQueue[T](capacity),
+		baseBlockingQueue: newBaseBlockingQueue[T](capacity),
 	}
 }
 
@@ -123,4 +123,22 @@ func (q *LinkedBlockingQueue[T]) Dump() []T {
 	q.Reset()
 
 	return values
+}
+
+// Size returns the current number of elements in the queue
+func (q *LinkedBlockingQueue[T]) Size() int {
+	q.Lock()
+	defer q.Unlock()
+	return q.GetCount()
+}
+
+// Clear removes all elements from the queue
+func (q *LinkedBlockingQueue[T]) Clear() {
+	q.Lock()
+	defer q.Unlock()
+
+	// Reset the queue
+	q.head = nil
+	q.tail = nil
+	q.Reset()
 }
